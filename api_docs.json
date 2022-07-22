@@ -1,0 +1,20 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "title": "My App backend API",
+      "description": "Api for My App",
+      "version": "1.0.0",
+      "license": {
+        "name": "Apache 2.0",
+        "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+      }
+    },
+    "basePath": "/",
+    "paths": {
+      
+    },
+    "definitions": {
+      
+    }
+  }
+  
