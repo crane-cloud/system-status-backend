@@ -11,7 +11,27 @@
     },
     "basePath": "/",
     "paths": {
-      
+      "/api/v1/statuses": {
+        "get": {
+          "tags": [
+            "status"
+          ],
+          "summary": "Get system status",
+          "description": "Get cranecloud service statuses",
+          "operationId": "getUsers",
+          "produces": [
+            "application/json"
+          ],
+          "responses": {
+            "200": {
+              "description": "Successfully retrieved System statuses"
+            },
+            "500": {
+              "description": "Internal Server error"
+            }
+          }
+        }
+      }
     },
     "definitions": {
       
