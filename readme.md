@@ -50,6 +50,11 @@ export DATABASE_URI=postgresql:///flask_app_db
 export FLASK_APP_SECRET=qY2i691SX2sEuZ7LUjY480RS48mw5qCeUiyV0i0vzmg
 export FLASK_ENV=development
 export FLASK_RUN_PORT=5000
+export CLIENT_BASE_URL=
+export BACKEND_BASE_URL=
+export MIRA_BACKEND_URL=
+export MIRA_FRONTEND_URL=
+export REGISTRY_URL=
 ```
 
 ### Run Database migrations
@@ -58,7 +63,8 @@ Run migrations for the database. This will create the tables for the models in t
 
 `python manage.py db upgrade`
 
-#### Note:
+#### Note
+
 If you make changes to the models, you need to create migrations for the changes by running `python manage.py db migrate` and then `python manage.py db upgrade` to add the changes to the database.
 
 ### Run Application
