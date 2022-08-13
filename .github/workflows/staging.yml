@@ -5,7 +5,7 @@ name: staging
 on:
   push:
     branches:
-      - innocent/deployment
+      - develop
 
 jobs:
   build:
