@@ -2,7 +2,6 @@
 import os
 from flask_restful import Resource
 from app.helpers.status import get_client_status_infor, get_cluster_status_info, get_database_status_infor, get_prometheus_status_info
-# from app.models.clusters import Cluster
 from flask import request
 
 
@@ -37,10 +36,19 @@ class SystemStatusView(Resource):
              'url': os.getenv('MIRA_BACKEND_URL', None)},
         ]
         mira_status = get_client_status_infor(mira_apps_list)
+
+        # get Registry status
+        habor_app = [
+            {'name': 'habor-registry',
+             'url': os.getenv('REGISTRY_URL', None)},
+        ]
+        registry_status = get_client_status_infor(habor_app)
+
         return dict(status='success', data={
             'cranecloud_status': cranecloud_status,
             # 'clusters_status': clusters_status,
             # 'prometheus_status': prometheus_status,
             'database_status': database_status,
-            'mira_status': mira_status
+            'mira_status': mira_status,
+            'registry': registry_status
         }), 200
