@@ -4,6 +4,7 @@ from server import app
 from flask.cli import FlaskGroup
 
 # import models
+from app.models.cluster import Cluster
 
 
 # register app and db with migration class
