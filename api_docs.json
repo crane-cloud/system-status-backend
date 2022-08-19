@@ -18,7 +18,7 @@
           ],
           "summary": "Get system status",
           "description": "Get cranecloud service statuses",
-          "operationId": "getUsers",
+          "operationId": "getStatuses",
           "produces": [
             "application/json"
           ],
