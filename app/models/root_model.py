@@ -34,7 +34,7 @@ class RootModel(db.Model):
         try:
             if instance is None:
                 return False
-
+                
             for key, value in kwargs.items():
                 setattr(instance, key, value)
             db.session.commit()
