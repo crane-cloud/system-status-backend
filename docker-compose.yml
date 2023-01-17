@@ -4,7 +4,7 @@ services:
   status_app_db:
     image: postgres:10
     container_name: status_app_db
-    restart: "no"
+    restart: unless-stopped
     # Optional: Map the container port to a host port to be able to connect with a local db client 
     ports:
       - 4224:5432
@@ -19,7 +19,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    restart: "no"
+    restart: unless-stopped
     container_name: status_app_api
     depends_on:
       - status_app_db
