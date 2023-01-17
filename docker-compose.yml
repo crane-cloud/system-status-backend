@@ -1,0 +1,44 @@
+version: '3.5'
+
+services:
+  status_app_db:
+    image: postgres:10
+    container_name: status_app_db
+    restart: "no"
+    # Optional: Map the container port to a host port to be able to connect with a local db client 
+    ports:
+      - 4224:5432
+    environment:
+      - POSTGRES_DB=status_db
+      - POSTGRES_User=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  status_app_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: "no"
+    container_name: status_app_api
+    depends_on:
+      - status_app_db
+    environment:
+      # - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
+      - FLASK_APP=server.py
+      - DATABASE_URI=postgresql://postgres:password@status_app_db:5432/status_db
+      - FLASK_APP_SECRET=qY2i691SX2sEuZ7LUjY480RS48mw5qCeUiyV0i0vzmg
+      - FLASK_ENV=development
+      - FLASK_RUN_PORT=5000
+      - CLIENT_BASE_URL= ${CLIENT_BASE_URL}
+      - BACKEND_BASE_URL= ${BACKEND_BASE_URL}
+      - MIRA_BACKEND_URL= ${MIRA_BACKEND_URL}
+      - MIRA_FRONTEND_URL= ${MIRA_FRONTEND_URL}
+      - REGISTRY_URL= ${REGISTRY_URL}
+    volumes:
+      - .:/app
+    ports:
+      - 5550:5000
+
+volumes:
+  postgres_data:
