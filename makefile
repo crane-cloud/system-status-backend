@@ -46,7 +46,7 @@ ssh-to-container:## ssh to a container
 
 migrate: ## Create migraation files
 	@ ${INFO} "Connecting to a container"
-	@ docker exec -it ziramba_app python manage.py db migrate
+	@ docker exec -it status_app python manage.py db migrate
 # set default target
 .DEFAULT_GOAL := help
 
