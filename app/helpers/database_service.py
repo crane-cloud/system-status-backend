@@ -79,7 +79,7 @@ class MysqlDbService(DatabaseService):
 
     def get_server_status(self):
         try:
-            connection = self.cSreate_connection()
+            connection = self.create_connection()
             if not connection:
                 return False
             cursor = connection.cursor()
