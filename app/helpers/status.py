@@ -79,8 +79,9 @@ def get_cluster_status_info(clusters):
 def get_prometheus_status(prometheus_url):
     # get prometheus data
     try:
+        timeout_seconds = 10
         response = requests.get(
-            f'{prometheus_url}/api/v1/status/runtimeinfo')
+            f'{prometheus_url}/api/v1/status/runtimeinfo', timeout=timeout_seconds)
 
         if response.status_code != 200:
             return {
@@ -110,10 +111,6 @@ def get_prometheus_status_info(clusters):
     failed = 0
     partial = 0
     for cluster in clusters:
-        kube_host = cluster.host
-        kube_token = cluster.token
-
-        kube_client = create_kube_clients(kube_host, kube_token)
         prometheus_url = cluster.prometheus_url
         if not prometheus_url:
             prometheus_status.append({
@@ -176,7 +173,8 @@ def get_database_status_infor():
 
 def check_url_status(url):
     try:
-        response = requests.get(url)
+        timeout_seconds=10
+        response = requests.get(url,timeout=timeout_seconds)
         if response.status_code != 200 and response.status_code != 201:
             return {
                 'status': 'failed',
