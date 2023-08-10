@@ -35,6 +35,7 @@ services:
       - MIRA_BACKEND_URL= ${MIRA_BACKEND_URL}
       - MIRA_FRONTEND_URL= ${MIRA_FRONTEND_URL}
       - REGISTRY_URL= ${REGISTRY_URL}
+      - REDIS_URL=${REDIS_URL}
     volumes:
       - .:/app
     ports:

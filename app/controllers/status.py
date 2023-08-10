@@ -11,7 +11,12 @@ class SystemStatusView(Resource):
 
     @cache.cached()
     def get(self):
-        app_status = cache.get('app_status')
+        try:
+            app_status = cache.get('app_status')
+        except Exception:
+            return dict(status='fail', message='Unable to reach the redis db'), 500
+
+        # return app_status
         if app_status:
             return dict(status='success', data=app_status), 200
 

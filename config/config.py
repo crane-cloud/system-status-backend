@@ -13,7 +13,6 @@ class Development(Base):
 
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URI")
-    # SQLALCHEMY_DATABASE_URI = "postgresql:///flask_app_db"
 
 
 class Testing(Base):
@@ -23,7 +22,6 @@ class Testing(Base):
     DEBUG = True
     # use a separate db
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_TEST_URI")
-    # SQLALCHEMY_DATABASE_URI = "postgresql:///flask_app_test_db"
 
 
 class Production(Base):
