@@ -8,6 +8,7 @@ from flask_jwt_extended import JWTManager
 from flasgger import Swagger
 from app.routes import api
 from app.models import db
+from app.helpers.cache_helper import cache
 
 # Load env variabes
 dotenv_path = join(dirname(__file__), '.env')
@@ -37,6 +38,9 @@ def create_app(config_name):
 
     # initialize jwt with app
     jwt = JWTManager(app)
+
+    # initialize cache with app
+    cache.init_app(app)
 
     # swagger
     app.config['SWAGGER'] = {

@@ -4,11 +4,22 @@ from flask_restful import Resource
 from app.helpers.status import get_client_status_infor, get_cluster_status_info, get_database_status_infor, get_prometheus_status_info
 from flask import request
 from app.models.cluster import Cluster
+from app.helpers.cache_helper import cache
 
 
 class SystemStatusView(Resource):
 
+    @cache.cached()
     def get(self):
+        try:
+            app_status = cache.get('app_status')
+        except Exception:
+            return dict(status='fail', message='Unable to reach the redis db'), 500
+
+        # return app_status
+        if app_status:
+            return dict(status='success', data=app_status), 200
+
         # get cranecloud status
         front_end_url = os.getenv('CLIENT_BASE_URL', None)
         backend_end_url = os.getenv('BACKEND_BASE_URL', None)
@@ -44,12 +55,14 @@ class SystemStatusView(Resource):
              'url': os.getenv('REGISTRY_URL', None)},
         ]
         registry_status = get_client_status_infor(habor_app)
-
-        return dict(status='success', data={
+        status_data = {
             'cranecloud_status': cranecloud_status,
             'clusters_status': clusters_status,
             'prometheus_status': prometheus_status,
             'database_status': database_status,
             'mira_status': mira_status,
             'registry': registry_status
-        }), 200
+        }
+        cache.set('app_status', status_data)
+
+        return dict(status='success', data=status_data), 200
