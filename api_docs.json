@@ -48,6 +48,20 @@
         "tags": ["status"],
         "summary": "Get system status series",
         "description": "Get service statuses series",
+        "parameters": [
+          {
+            "name": "series",
+            "in": "query",
+            "type": "boolean",
+            "description": "if set to true returns series data"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "type": "string",
+            "description": "The type of status"
+          }
+        ],
         "operationId": "getStatusesSeries",
         "produces": ["application/json"],
         "responses": {

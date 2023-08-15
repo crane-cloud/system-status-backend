@@ -9,6 +9,7 @@ from app.models.status import Status
 from app.schemas.status import StatusSchema
 from app.helpers.cache_helper import cache
 from app.models import db
+from sqlalchemy import or_
 import json
 
 
@@ -74,7 +75,6 @@ class SystemStatusView(Resource):
 
 class SystemStatusSeriesView(Resource):
     def post(self):
-
         # get cranecloud status
         front_end_url = os.getenv('CLIENT_BASE_URL', None)
         backend_end_url = os.getenv('BACKEND_BASE_URL', None)
@@ -110,14 +110,7 @@ class SystemStatusSeriesView(Resource):
              'url': os.getenv('REGISTRY_URL', None)},
         ]
         registry_status = get_client_status_infor(habor_app)
-        status_data = {
-            'cranecloud_status': cranecloud_status,
-            'clusters_status': clusters_status,
-            'prometheus_status': prometheus_status,
-            'database_status': database_status,
-            'mira_status': mira_status,
-            'registry': registry_status
-        }
+
         # Cranecloud status
         for item in cranecloud_status["data"]:
             name = item["app_name"]
@@ -141,7 +134,7 @@ class SystemStatusSeriesView(Resource):
                 description = item.get("data", {}).get("message", None)
                 status_entry = Status(
                     name=name,
-                    parent_name="cranecloud_status",
+                    parent_name="database_status",
                     status=app_status,
                     description=json.dumps(description)
                 )
@@ -215,3 +208,41 @@ class SystemStatusSeriesView(Resource):
             return dict(status='fail', message=f'Internal Server Error'), 500
 
         return dict(status='success', message='Status saved successfully'), 200
+
+    def get(self):
+        status_schema = StatusSchema(many=True)
+        series = request.args.get('series')
+        series_type = request.args.get('type')
+
+        if series_type:
+            # statuses = Status.find_all(
+            #     name=series_type, parent_name=series_type)
+            statuses = Status.query.filter(or_(Status.name.like(
+                f'%{series_type}%'), Status.parent_name.like(f'%{series_type}%')))
+
+        else:
+            statuses = Status.find_all()
+
+        validated_status_data, errors = status_schema.dumps(statuses)
+
+        clusters_data_list = json.loads(validated_status_data)
+
+        if errors:
+            return dict(status='fail', message=errors,
+                        data=dict(statuses=clusters_data_list)), 409
+
+        if series:
+            # Prepare series data for graphing
+            graph_data = []
+            for entry in clusters_data_list:
+                graph_data.append({
+                    'timestamp': entry['date_created'],
+                    'name': entry['name'],
+                    'parent_name': entry['parent_name'],
+                    'status': entry['status']
+                })
+
+            return dict(status='Success', data=dict(graph_data=graph_data)), 200
+
+        return dict(status='Success',
+                    data=dict(statuses=clusters_data_list)), 200
