@@ -4,13 +4,14 @@ from flask_restful import Resource
 from app.helpers.status import get_client_status_infor, get_cluster_status_info, get_database_status_infor, get_prometheus_status_info
 from flask import request
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import or_
+import json
+from datetime import datetime
 from app.models.cluster import Cluster
 from app.models.status import Status
 from app.schemas.status import StatusSchema
 from app.helpers.cache_helper import cache
 from app.models import db
-from sqlalchemy import or_
-import json
 
 
 class SystemStatusView(Resource):
@@ -202,12 +203,21 @@ class SystemStatusSeriesView(Resource):
                 db.session.add(registry_status_entry)
 
             db.session.commit()
+
+            status_data = {
+                'cranecloud_status': cranecloud_status,
+                'clusters_status': clusters_status,
+                'prometheus_status': prometheus_status,
+                'database_status': database_status,
+                'mira_status': mira_status,
+                'registry': registry_status
+            }
+
+            return dict(status='success', data=status_data), 200
         except SQLAlchemyError as e:
             db.session.rollback()
             print(e)
             return dict(status='fail', message=f'Internal Server Error'), 500
-
-        return dict(status='success', message='Status saved successfully'), 200
 
     def get(self):
         status_schema = StatusSchema(many=True)
@@ -215,11 +225,8 @@ class SystemStatusSeriesView(Resource):
         series_type = request.args.get('type')
 
         if series_type:
-            # statuses = Status.find_all(
-            #     name=series_type, parent_name=series_type)
             statuses = Status.query.filter(or_(Status.name.like(
                 f'%{series_type}%'), Status.parent_name.like(f'%{series_type}%')))
-
         else:
             statuses = Status.find_all()
 
