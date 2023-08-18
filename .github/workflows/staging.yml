@@ -98,10 +98,6 @@ jobs:
           project_id: crane-cloud-274413
           install_components: 'gke-gcloud-auth-plugin'
 
-
-      - name: Install (Helm)
-        uses: azure/setup-helm@v1
-
       - name: Login (Kubernetes Cluster)
         uses: google-github-actions/get-gke-credentials@v1
         with:
