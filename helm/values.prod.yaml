@@ -75,3 +75,4 @@ environment:
   MIRA_FRONTEND_URL: http://mira.cranecloud.io:3000
   PROMETHEUS_URL: https://prom.cranecloud.io/
   REGISTRY_URL: http://registry.cranecloud.io
+  REDIS_URL: ${{ REDIS_URL }}
