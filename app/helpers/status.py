@@ -33,7 +33,6 @@ def get_kube_cluster_status(kube_client):
         failed = 0
         for cluster_status_list_item in cluster_status_list.items:
             kubelet_status = cluster_status_list_item.conditions[0]
-            print(kubelet_status)
             cluster_status.append({
                 'name': cluster_status_list_item.metadata.name,
                 'status': kubelet_status.status,
