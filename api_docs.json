@@ -60,6 +60,18 @@
             "in": "query",
             "type": "string",
             "description": "The type of status"
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "type": "number",
+            "description": "The start period of the data (timestamp)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "type": "number",
+            "description": "The end period of the data (timestamp)"
           }
         ],
         "operationId": "getStatusesSeries",

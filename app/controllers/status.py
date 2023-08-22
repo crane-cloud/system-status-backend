@@ -12,6 +12,7 @@ from app.models.status import Status
 from app.schemas.status import StatusSchema
 from app.helpers.cache_helper import cache
 from app.models import db
+from sqlalchemy import func
 
 
 class SystemStatusView(Resource):
@@ -221,14 +222,27 @@ class SystemStatusSeriesView(Resource):
 
     def get(self):
         status_schema = StatusSchema(many=True)
-        series = request.args.get('series')
+        series = bool(request.args.get('series', False))
         series_type = request.args.get('type')
+        start = request.args.get('start', None)
+        end = request.args.get('end', None)
 
+        query = Status.query
         if series_type:
-            statuses = Status.query.filter(or_(Status.name.like(
-                f'%{series_type}%'), Status.parent_name.like(f'%{series_type}%')))
-        else:
-            statuses = Status.find_all()
+            statuses = query.filter(Status.name.like(
+                f'%{series_type}%') | Status.parent_name.like(f'%{series_type}%'))
+
+        if start:
+            start_datetime = datetime.fromtimestamp(int(float(start)))
+            query = query.filter(
+                Status.date_created >= start_datetime)
+
+        if end:
+            end_datetime = datetime.fromtimestamp(int(float(end)))
+            query = query.filter(
+                Status.date_created <= end_datetime)
+
+        statuses = query.all()
 
         validated_status_data, errors = status_schema.dumps(statuses)
 
@@ -243,7 +257,7 @@ class SystemStatusSeriesView(Resource):
             graph_data = []
             for entry in clusters_data_list:
                 graph_data.append({
-                    'timestamp': entry['date_created'],
+                    'timestamp': datetime.strptime(entry['date_created'], "%Y-%m-%dT%H:%M:%S.%f").timestamp(),
                     'name': entry['name'],
                     'parent_name': entry['parent_name'],
                     'status': entry['status']

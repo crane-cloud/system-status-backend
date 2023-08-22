@@ -71,8 +71,8 @@ environment:
   FLASK_APP_SALT: ${{ APP_SALT }}
   FLASK_APP_SECRET: ${{ APP_SECRET }}
   FLASK_ENV: production
-  MIRA_BACKEND_URL: http://mira.cranecloud.io:5001
-  MIRA_FRONTEND_URL: http://mira.cranecloud.io:3000
+  MIRA_BACKEND_URL: https://mira.cranecloud.io
+  MIRA_FRONTEND_URL: https://mira.cranecloud.io
   PROMETHEUS_URL: https://prom.cranecloud.io/
   REGISTRY_URL: http://registry.cranecloud.io
   REDIS_URL: ${{ REDIS_URL }}

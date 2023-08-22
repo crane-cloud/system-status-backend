@@ -173,8 +173,8 @@ def get_database_status_infor():
 
 def check_url_status(url):
     try:
-        timeout_seconds=10
-        response = requests.get(url,timeout=timeout_seconds)
+        timeout_seconds = 10
+        response = requests.get(url, timeout=timeout_seconds)
         if response.status_code != 200 and response.status_code != 201:
             return {
                 'status': 'failed',
