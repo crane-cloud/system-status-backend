@@ -5,6 +5,7 @@ from flask.cli import FlaskGroup
 
 # import models
 from app.models.cluster import Cluster
+from app.models.status import Status
 
 
 # register app and db with migration class
