@@ -130,6 +130,7 @@ class SystemStatusSeriesView(Resource):
             db.session.add(status_entry)
         try:
             # Database_status
+            
             for item in database_status["data"]:
                 name = item["database_name"]
                 app_status = item["status"]
@@ -143,32 +144,34 @@ class SystemStatusSeriesView(Resource):
                 db.session.add(status_entry)
 
             # Prometheus_status
-            for item in prometheus_status["data"]:
-                name = item["cluster_name"]
-                app_status = item["status"]
-                description = item["prometheus_status"]
+            if prometheus_status:
+                for item in prometheus_status["data"]:
+                    name = item["cluster_name"]
+                    app_status = item["status"]
+                    description = item["prometheus_status"]
 
-                prometheus_status_entry = Status(
-                    name=name,
-                    parent_name="prometheus_status",
-                    status=app_status,
-                    description=json.dumps(description)
-                )
-                db.session.add(prometheus_status_entry)
+                    prometheus_status_entry = Status(
+                        name=name,
+                        parent_name="prometheus_status",
+                        status=app_status,
+                        description=json.dumps(description)
+                    )
+                    db.session.add(prometheus_status_entry)
 
             # clusters_status
-            for item in clusters_status["data"]:
-                name = item["cluster_name"]
-                app_status = item["status"]
-                description = item["cluster_status"]
+            if clusters_status:
+                for item in clusters_status["data"]:
+                    name = item["cluster_name"]
+                    app_status = item["status"]
+                    description = item["cluster_status"]
 
-                cluster_status_entry = Status(
-                    name=name,
-                    parent_name="cluster_status",
-                    status=app_status,
-                    description=json.dumps(description)
-                )
-                db.session.add(cluster_status_entry)
+                    cluster_status_entry = Status(
+                        name=name,
+                        parent_name="cluster_status",
+                        status=app_status,
+                        description=json.dumps(description)
+                    )
+                    db.session.add(cluster_status_entry)
 
             # Mira_status
             for item in mira_status["data"]:
@@ -267,3 +270,32 @@ class SystemStatusSeriesView(Resource):
 
         return dict(status='Success',
                     data=dict(statuses=clusters_data_list)), 200
+
+class SystemStatusUptime(Resource):
+    def get(self):
+
+        resource_name = request.args.get('resource_name')
+
+        if not resource_name:
+            return dict(status='fail', message=f"Please send a resource name",
+                        data=None), 400
+    
+        total_count = Status.query.filter_by(name=resource_name).count()
+        
+        success_count = Status.query.filter_by(name=resource_name, status='success').count()
+        
+        # If there are no records, return a specific message, prevent division by 0
+        if total_count == 0:
+            return dict(status='fail', message=f"No records found for resource '{resource_name}'",
+                        data=None), 404
+        
+        # Calculate uptime percentage
+        uptime_percentage = (success_count / total_count) * 100 if total_count else 0
+
+        
+        up_time={
+            "resource_name": resource_name,
+            "uptime_percentage": round(uptime_percentage, 2)
+        }
+        return dict(status='Success',
+                    data=dict(uptime=up_time)), 200
