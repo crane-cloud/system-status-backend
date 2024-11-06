@@ -239,7 +239,7 @@ class SystemStatusSeriesView(Resource):
             start_datetime = datetime.fromtimestamp(int(float(start)))
         else:
             start_datetime = datetime.now() - timedelta(days=30)
-            
+
         # should always send 
         query = query.filter(
                 Status.date_created >= start_datetime)
@@ -258,9 +258,28 @@ class SystemStatusSeriesView(Resource):
         if errors:
             return dict(status='fail', message=errors,
                         data=dict(statuses=clusters_data_list)), 409
+        
+        resource_uptime = {}
+        for entry in clusters_data_list:
+            resource_name = entry['name']
+            status = entry['status']
+
+            
+            if resource_name not in resource_uptime:
+                resource_uptime[resource_name] = {'total': 0, 'up': 0}
+
+            
+            resource_uptime[resource_name]['total'] += 1
+            if status == 'success':
+                resource_uptime[resource_name]['up'] += 1
+
+        # percentage uptime for each resource
+        for resource, counts in resource_uptime.items():
+            total, up = counts['total'], counts['up']
+            uptime_percentage = (up / total) * 100 if total > 0 else 0
+            resource_uptime[resource]['uptime_percentage'] = round(uptime_percentage, 2)
 
         if series:
-            # Prepare series data for graphing
             graph_data = []
             for entry in clusters_data_list:
                 graph_data.append({
@@ -270,10 +289,9 @@ class SystemStatusSeriesView(Resource):
                     'status': entry['status']
                 })
 
-            return dict(status='Success', data=dict(graph_data=graph_data)), 200
+            return dict(status='Success', data=dict(graph_data=graph_data, uptime=resource_uptime)), 200
 
-        return dict(status='Success',
-                    data=dict(statuses=clusters_data_list)), 200
+        return dict(status='Success',  data=dict(statuses=clusters_data_list)), 200
 
 class SystemStatusUptime(Resource):
     def get(self):
