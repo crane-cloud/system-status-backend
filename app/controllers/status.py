@@ -6,7 +6,7 @@ from flask import request
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import or_
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.models.cluster import Cluster
 from app.models.status import Status
 from app.schemas.status import StatusSchema
@@ -237,7 +237,11 @@ class SystemStatusSeriesView(Resource):
 
         if start:
             start_datetime = datetime.fromtimestamp(int(float(start)))
-            query = query.filter(
+        else:
+            start_datetime = datetime.now() - timedelta(days=30)
+            
+        # should always send 
+        query = query.filter(
                 Status.date_created >= start_datetime)
 
         if end:
