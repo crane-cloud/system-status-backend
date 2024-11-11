@@ -6,7 +6,7 @@ from flask import request
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import or_
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.models.cluster import Cluster
 from app.models.status import Status
 from app.schemas.status import StatusSchema
@@ -130,6 +130,7 @@ class SystemStatusSeriesView(Resource):
             db.session.add(status_entry)
         try:
             # Database_status
+            
             for item in database_status["data"]:
                 name = item["database_name"]
                 app_status = item["status"]
@@ -143,32 +144,34 @@ class SystemStatusSeriesView(Resource):
                 db.session.add(status_entry)
 
             # Prometheus_status
-            for item in prometheus_status["data"]:
-                name = item["cluster_name"]
-                app_status = item["status"]
-                description = item["prometheus_status"]
+            if prometheus_status:
+                for item in prometheus_status["data"]:
+                    name = item["cluster_name"]
+                    app_status = item["status"]
+                    description = item["prometheus_status"]
 
-                prometheus_status_entry = Status(
-                    name=name,
-                    parent_name="prometheus_status",
-                    status=app_status,
-                    description=json.dumps(description)
-                )
-                db.session.add(prometheus_status_entry)
+                    prometheus_status_entry = Status(
+                        name=name,
+                        parent_name="prometheus_status",
+                        status=app_status,
+                        description=json.dumps(description)
+                    )
+                    db.session.add(prometheus_status_entry)
 
             # clusters_status
-            for item in clusters_status["data"]:
-                name = item["cluster_name"]
-                app_status = item["status"]
-                description = item["cluster_status"]
+            if clusters_status:
+                for item in clusters_status["data"]:
+                    name = item["cluster_name"]
+                    app_status = item["status"]
+                    description = item["cluster_status"]
 
-                cluster_status_entry = Status(
-                    name=name,
-                    parent_name="cluster_status",
-                    status=app_status,
-                    description=json.dumps(description)
-                )
-                db.session.add(cluster_status_entry)
+                    cluster_status_entry = Status(
+                        name=name,
+                        parent_name="cluster_status",
+                        status=app_status,
+                        description=json.dumps(description)
+                    )
+                    db.session.add(cluster_status_entry)
 
             # Mira_status
             for item in mira_status["data"]:
@@ -234,7 +237,11 @@ class SystemStatusSeriesView(Resource):
 
         if start:
             start_datetime = datetime.fromtimestamp(int(float(start)))
-            query = query.filter(
+        else:
+            start_datetime = datetime.now() - timedelta(days=30)
+
+        # should always send 
+        query = query.filter(
                 Status.date_created >= start_datetime)
 
         if end:
@@ -251,9 +258,28 @@ class SystemStatusSeriesView(Resource):
         if errors:
             return dict(status='fail', message=errors,
                         data=dict(statuses=clusters_data_list)), 409
+        
+        resource_uptime = {}
+        for entry in clusters_data_list:
+            resource_name = entry['name']
+            status = entry['status']
+
+            
+            if resource_name not in resource_uptime:
+                resource_uptime[resource_name] = {'total': 0, 'up': 0}
+
+            
+            resource_uptime[resource_name]['total'] += 1
+            if status == 'success':
+                resource_uptime[resource_name]['up'] += 1
+
+        # percentage uptime for each resource
+        for resource, counts in resource_uptime.items():
+            total, up = counts['total'], counts['up']
+            uptime_percentage = (up / total) * 100 if total > 0 else 0
+            resource_uptime[resource]['uptime_percentage'] = round(uptime_percentage, 2)
 
         if series:
-            # Prepare series data for graphing
             graph_data = []
             for entry in clusters_data_list:
                 graph_data.append({
@@ -263,7 +289,35 @@ class SystemStatusSeriesView(Resource):
                     'status': entry['status']
                 })
 
-            return dict(status='Success', data=dict(graph_data=graph_data)), 200
+            return dict(status='Success', data=dict(graph_data=graph_data, uptime=resource_uptime)), 200
 
+        return dict(status='Success',  data=dict(statuses=clusters_data_list)), 200
+
+class SystemStatusUptime(Resource):
+    def get(self):
+
+        resource_name = request.args.get('resource_name')
+
+        if not resource_name:
+            return dict(status='fail', message=f"Please send a resource name",
+                        data=None), 400
+    
+        total_count = Status.query.filter_by(name=resource_name).count()
+        
+        success_count = Status.query.filter_by(name=resource_name, status='success').count()
+        
+        # If there are no records, return a specific message, prevent division by 0
+        if total_count == 0:
+            return dict(status='fail', message=f"No records found for resource '{resource_name}'",
+                        data=None), 404
+        
+        # Calculate uptime percentage
+        uptime_percentage = (success_count / total_count) * 100 if total_count else 0
+
+        
+        up_time={
+            "resource_name": resource_name,
+            "uptime_percentage": round(uptime_percentage, 2)
+        }
         return dict(status='Success',
-                    data=dict(statuses=clusters_data_list)), 200
+                    data=dict(uptime=up_time)), 200
