@@ -193,6 +193,32 @@
           }
         }
       }
+    },
+    "/api/v1/uptime":{
+      "get": {
+        "tags": ["uptime"],
+        "summary": "Get system resources uptime",
+        "description": "Get service uptime percentages",
+        "parameters": [
+          {
+            "name": "resource_name",
+            "in": "query",
+            "type": "string",
+            "description": "A resource name such as cranecloud-frontend"
+          }
+
+        ],
+        "operationId": "getSystemUptime",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved System Uptime"
+          },
+          "500": {
+            "description": "Internal Server error"
+          }
+        }
+      }
     }
   },
   "definitions": {
