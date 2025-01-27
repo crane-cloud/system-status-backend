@@ -76,3 +76,6 @@ environment:
   PROMETHEUS_URL: http://staging-prom.cranecloud.io/
   REGISTRY_URL: http://registry.cranecloud.io
   REDIS_URL: ${{ REDIS_URL }}
+  APP_LOGGER_SERVER_URL: https://staging-logger.cranecloud.io
+  MONITORING_SERVICE_URL: https://staging-monitoring.cranecloud.io
+  DATABASE_SERVICE_URL: https://staging-database.cranecloud.io
