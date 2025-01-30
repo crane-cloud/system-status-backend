@@ -240,7 +240,7 @@ class SystemStatusSeriesView(Resource):
 
                 services_status_entry = Status(
                     name=name,
-                    parent_name="mira_status",
+                    parent_name="services_status",
                     status=app_status,
                     description=json.dumps(description),
                     url=app_url
