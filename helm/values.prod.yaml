@@ -76,3 +76,6 @@ environment:
   PROMETHEUS_URL: https://prom.cranecloud.io/
   REGISTRY_URL: http://registry.cranecloud.io
   REDIS_URL: ${{ REDIS_URL }}
+  APP_LOGGER_SERVER_URL: https://logger.cranecloud.io
+  MONITORING_SERVICE_URL: https://monitoring.cranecloud.io
+  DATABASE_SERVICE_URL: https://database.cranecloud.io

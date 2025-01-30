@@ -56,6 +56,18 @@ class SystemStatusView(Resource):
         ]
         mira_status = get_client_status_infor(mira_apps_list)
 
+        # get services status
+        services_apps_list = [
+            {'name': 'app-logger-service',
+             'url': os.getenv('APP_LOGGER_SERVER_URL', None)},
+            {'name': 'monitoring-service',
+             'url': os.getenv('MONITORING_SERVICE_URL', None)},
+            {'name': 'database-service',
+             'url': os.getenv('DATABASE_SERVICE_URL', None)},
+        ]
+
+        services_status = get_client_status_infor(services_apps_list)
+
         # get Registry status
         habor_app = [
             {'name': 'habor-registry',
@@ -68,6 +80,7 @@ class SystemStatusView(Resource):
             'prometheus_status': prometheus_status,
             'database_status': database_status,
             'mira_status': mira_status,
+            'services_status': services_status,
             'registry': registry_status
         }
         cache.set('app_status', status_data)
@@ -113,6 +126,18 @@ class SystemStatusSeriesView(Resource):
         ]
         registry_status = get_client_status_infor(habor_app)
 
+        # get services status
+        services_apps_list = [
+            {'name': 'app-logger-service',
+             'url': os.getenv('APP_LOGGER_SERVER_URL', None)},
+            {'name': 'monitoring-service',
+             'url': os.getenv('MONITORING_SERVICE_URL', None)},
+            {'name': 'database-service',
+             'url': os.getenv('DATABASE_SERVICE_URL', None)},
+        ]
+
+        services_status = get_client_status_infor(services_apps_list)
+
         # Cranecloud status
         for item in cranecloud_status["data"]:
             name = item["app_name"]
@@ -130,7 +155,7 @@ class SystemStatusSeriesView(Resource):
             db.session.add(status_entry)
         try:
             # Database_status
-            
+
             for item in database_status["data"]:
                 name = item["database_name"]
                 app_status = item["status"]
@@ -206,6 +231,22 @@ class SystemStatusSeriesView(Resource):
                 )
                 db.session.add(registry_status_entry)
 
+             # services_status
+            for item in services_status["data"]:
+                name = item["app_name"]
+                app_status = item["status"]
+                description = item["data"]
+                app_url = item['app_url']
+
+                services_status_entry = Status(
+                    name=name,
+                    parent_name="mira_status",
+                    status=app_status,
+                    description=json.dumps(description),
+                    url=app_url
+                )
+                db.session.add(services_status_entry)
+
             db.session.commit()
 
             status_data = {
@@ -214,6 +255,7 @@ class SystemStatusSeriesView(Resource):
                 'prometheus_status': prometheus_status,
                 'database_status': database_status,
                 'mira_status': mira_status,
+                'services_status': services_status,
                 'registry': registry_status
             }
 
@@ -240,9 +282,9 @@ class SystemStatusSeriesView(Resource):
         else:
             start_datetime = datetime.now() - timedelta(days=30)
 
-        # should always send 
+        # should always send
         query = query.filter(
-                Status.date_created >= start_datetime)
+            Status.date_created >= start_datetime)
 
         if end:
             end_datetime = datetime.fromtimestamp(int(float(end)))
@@ -258,17 +300,15 @@ class SystemStatusSeriesView(Resource):
         if errors:
             return dict(status='fail', message=errors,
                         data=dict(statuses=clusters_data_list)), 409
-        
+
         resource_uptime = {}
         for entry in clusters_data_list:
             resource_name = entry['name']
             status = entry['status']
 
-            
             if resource_name not in resource_uptime:
                 resource_uptime[resource_name] = {'total': 0, 'up': 0}
 
-            
             resource_uptime[resource_name]['total'] += 1
             if status == 'success':
                 resource_uptime[resource_name]['up'] += 1
@@ -277,7 +317,8 @@ class SystemStatusSeriesView(Resource):
         for resource, counts in resource_uptime.items():
             total, up = counts['total'], counts['up']
             uptime_percentage = (up / total) * 100 if total > 0 else 0
-            resource_uptime[resource]['uptime_percentage'] = round(uptime_percentage, 2)
+            resource_uptime[resource]['uptime_percentage'] = round(
+                uptime_percentage, 2)
 
         if series:
             graph_data = []
@@ -293,6 +334,7 @@ class SystemStatusSeriesView(Resource):
 
         return dict(status='Success',  data=dict(statuses=clusters_data_list)), 200
 
+
 class SystemStatusUptime(Resource):
     def get(self):
 
@@ -301,21 +343,22 @@ class SystemStatusUptime(Resource):
         if not resource_name:
             return dict(status='fail', message=f"Please send a resource name",
                         data=None), 400
-    
+
         total_count = Status.query.filter_by(name=resource_name).count()
-        
-        success_count = Status.query.filter_by(name=resource_name, status='success').count()
-        
+
+        success_count = Status.query.filter_by(
+            name=resource_name, status='success').count()
+
         # If there are no records, return a specific message, prevent division by 0
         if total_count == 0:
             return dict(status='fail', message=f"No records found for resource '{resource_name}'",
                         data=None), 404
-        
-        # Calculate uptime percentage
-        uptime_percentage = (success_count / total_count) * 100 if total_count else 0
 
-        
-        up_time={
+        # Calculate uptime percentage
+        uptime_percentage = (success_count / total_count) * \
+            100 if total_count else 0
+
+        up_time = {
             "resource_name": resource_name,
             "uptime_percentage": round(uptime_percentage, 2)
         }
