@@ -171,19 +171,39 @@ def get_database_status_infor():
             'data': database_status}
 
 
+
 def check_url_status(url):
+    timeout_seconds = 10
     try:
-        timeout_seconds = 10
         response = requests.get(url, timeout=timeout_seconds)
-        if response.status_code != 200 and response.status_code != 201:
+        if response.status_code not in [200, 201]:
             return {
                 'status': 'failed',
                 'data': {'status_code': response.status_code,
                          'error': response.reason}
             }
-
         return {'status': 'success',
                 'message': 'Connection successful'}
+    except requests.exceptions.SSLError:
+        # Retrying without verifying SSL certificate
+        try:
+            response = requests.get(url, timeout=timeout_seconds, verify=False)
+            if response.status_code in [200, 201]:
+                return {
+                    'status': 'partial',
+                    'message': 'Connection successful but SSL certificate is not valid'
+                }
+            else:
+                return {
+                    'status': 'failed',
+                    'data': {'status_code': response.status_code,
+                             'error': response.reason}
+                }
+        except Exception as e:
+            return {
+                'status': 'error',
+                'data': str(e)
+            }
     except Exception as e:
         return {
             'status': 'error',
@@ -211,7 +231,7 @@ def get_client_status_infor(apps_list=[]):
         status_info = {
             'app_name': app['name'],
             'app_url': app['url'],
-            'status': 'success' if status['status'] == 'success' else 'failed',
+            'status': 'success' if status['status'] == 'success' else 'partial' if status['status'] == 'partial' else 'failed',
             'data': status
         }
         client_status.append(status_info)
